@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Page</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link href="style.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f7f9fc;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .login-container {
+            background: #fff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            width: 100%;
+        }
+        .login-container h2 {
+            margin-bottom: 20px;
+        }
+        .form-group i {
+            position: absolute;
+            right: 10px;
+            top: 10px;
+            color: #aaa;
+        }
+        .alert {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <h2 class="text-center">Login</h2>
+        <div id="alert" class="alert alert-danger" role="alert">
+            <!-- Error message will be injected here -->
+        </div>
+        <form class="needs-validation" novalidate>
+            <div class="form-group position-relative">
+                <label for="email">Email address</label>
+                <input type="email" class="form-control" id="email" placeholder="Enter email" required>
+                <i class="fas fa-envelope"></i>
+                <div class="invalid-feedback">Please enter a valid email address.</div>
+            </div>
+            <div class="form-group position-relative">
+                <label for="password">Password</label>
+                <input type="password" class="form-control" id="password" placeholder="Password" required>
+                <i class="fas fa-lock"></i>
+                <div class="invalid-feedback">Please enter your password.</div>
+            </div>
+            <button type="submit" class="btn btn-primary btn-block">Login</button>
+            <div class="text-center mt-3">
+                <a href="#" id="reset-password-link">Forgot your password?</a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Bootstrap JS, Popper.js, and jQuery -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <!-- Firebase App (the core Firebase SDK) -->
+    <script src="https://www.gstatic.com/firebasejs/9.12.1/firebase-app.js"></script>
+    <!-- Firebase Authentication -->
+    <script src="https://www.gstatic.com/firebasejs/9.12.1/firebase-auth.js"></script>
+
+    <script type="module">
+        // Import the required Firebase modules
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.12.1/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/9.12.1/firebase-auth.js";
+
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyC3ANmOdzhjPgxWq91vx_qnpVMpDq-qhig",
+            authDomain: "projectmain1-44cce.firebaseapp.com",
+            databaseURL: "https://projectmain1-44cce-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "projectmain1-44cce",
+            storageBucket: "projectmain1-44cce.appspot.com",
+            messagingSenderId: "592837634615",
+            appId: "1:592837634615:web:ca63818dd7101534dc6db2"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+
+        // Function to handle sign-in
+        const handleLogin = async (email, password) => {
+            const alertDiv = document.getElementById('alert');
+            try {
+                const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                console.log('Logged in:', userCredential.user);
+
+                // Display success message
+                alertDiv.textContent = 'User logged in successfully!';
+                alertDiv.style.color = 'green';
+                alertDiv.style.display = 'block';
+
+                // Redirect to dashboard
+                window.location.href = 'index.html';
+            } catch (error) {
+                console.error('Error logging in:', error);
+                alertDiv.textContent = 'Failed to login: ' + error.message;
+                alertDiv.style.color = 'red';
+                alertDiv.style.display = 'block';
+            }
+        };
+
+        // Function to handle password reset
+        const handlePasswordReset = async (email) => {
+            const alertDiv = document.getElementById('alert');
+            try {
+                await sendPasswordResetEmail(auth, email);
+                alertDiv.textContent = 'Password reset email sent!';
+                alertDiv.style.color = 'green';
+                alertDiv.style.display = 'block';
+            } catch (error) {
+                console.error('Error sending password reset email:', error);
+                alertDiv.textContent = 'Failed to send password reset email: ' + error.message;
+                alertDiv.style.color = 'red';
+                alertDiv.style.display = 'block';
+            }
+        };
+
+        // Add a listener for the submit event on the form
+        document.addEventListener('DOMContentLoaded', () => {
+            const form = document.querySelector('form');
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const email = document.getElementById('email').value;
+                const password = document.getElementById('password').value;
+                handleLogin(email, password);
+            });
+
+            const resetPasswordLink = document.getElementById('reset-password-link');
+            resetPasswordLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                const email = prompt("Please enter your email for password reset:");
+                if (email) {
+                    handlePasswordReset(email);
+                }
+            });
+        });
+    </script>
+</body>
+</html>
