@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Apiaries and Hives</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+        <a class="navbar-brand" href="#">
+            <img src="images/7835cfc6-3d93-401c-b774-fa98a9d4f8c8-removebg-preview.png" alt="Smart Beekeeping Logo" style="height: 60px;">
+        </a>
+        <a class="navbar-brand" href="#">Smart Beekeeping</a>
+
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ml-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="index.html">Home</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="hive.html">Hives</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="analytics.html">Analytics</a>
+                </li>
+                
+                <li class="nav-item">
+                    <a class="nav-link" href="profile.html">Profile</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#" id="logoutLink">Logout</a>
+                </li>
+                
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h1 class="my-4 text-center">Smart Nyuki Solutions</h1>
+        <div class="row">
+            <div class="col-md-8 left-column">
+                <h2 class="text-center">Apiaries and Hives</h2>
+                <!-- Content -->
+                <div class="container mt-5">
+                    <!-- Form to add a new apiary -->
+                    <div class="container">
+                        <h2>Add a New Apiary</h2>
+                        <form id="addApiaryForm">
+                            <div class="form-group">
+                                <label for="apiaryName">Apiary Name</label>
+                                <input type="text" class="form-control" id="apiaryName" placeholder="Enter apiary name" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="apiaryLocation">Location</label>
+                                <input type="text" class="form-control" id="apiaryLocation" placeholder="Enter apiary location" required>
+                            </div>
+                            <button type="submit" id="addApiaryBtn" class="btn btn-primary btn-small">Add Apiary</button>
+                        </form>
+                        <button id="clearAllBtn" class="btn btn-warning btn-small mt-3">Clear All Apiaries</button>
+                    </div>
+
+                    <!-- Section to display apiary data -->
+                    <div class="container my-4">
+                        <h2>Apiaries</h2>
+                        <div id="apiaryData" class="row">
+                            <!-- Apiary data will be displayed here -->
+                        </div>
+                    </div>
+
+                    <!-- Modal for adding a new hive -->
+                    <div class="modal fade" id="addHiveModal" tabindex="-1" role="dialog" aria-labelledby="addHiveModalLabel" aria-hidden="true">
+                        <div class="modal-dialog" role="document">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="addHiveModalLabel">Add a New Hive</h5>
+                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                        <span aria-hidden="true">&times;</span>
+                                    </button>
+                                </div>
+                                <div class="modal-body">
+                                    <form id="addHiveForm">
+                                        <div class="form-group">
+                                            <label for="hiveName">Hive Name</label>
+                                            <input type="text" class="form-control" id="hiveName" placeholder="Enter hive name" required>
+                                        </div>
+                                        <input type="hidden" id="selectedApiary">
+                                        <button type="submit" class="btn btn-primary btn-small">Add Hive</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Hive Card Example -->
+
+                    <!-- Modal for Hive Conditions -->
+                    <div class="modal fade" id="hiveConditionModal" tabindex="-1" aria-labelledby="hiveConditionModalLabel" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="hiveConditionModalLabel">Hive Conditions</h5>
+                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                        <span aria-hidden="true">&times;</span>
+                                    </button>
+                                </div>
+                                <div class="modal-body">
+                                    <div id="hiveConditionDetails">
+                                        <!-- Hive condition details will be populated here -->
+                                    </div>
+                                    <canvas id="hiveWeeklyGraph"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Modal for hive analytics -->
+                    <div class="modal fade" id="hiveAnalyticsModal" tabindex="-1" role="dialog" aria-labelledby="hiveAnalyticsModalLabel" aria-hidden="true">
+                        <div class="modal-dialog" role="document">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="hiveAnalyticsModalLabel">Hive Analytics</h5>
+                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                        <span aria-hidden="true">&times;</span>
+                                    </button>
+                                </div>
+                                <div class="modal-body">
+                                    <canvas id="hiveAnalyticsChart"></canvas>
+                                    <div class="hive-condition mt-3">
+                                        <h6>Overall Condition</h6>
+                                        <p id="hiveCondition"></p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 right-column">
+                <div class="notifications">
+                    <h2 class="text-center">Notifications</h2>
+                    <div class="notification-icon" onclick="toggleNotifications()">
+                        <i class="fas fa-bell"></i>
+                        <span class="badge badge-danger" id="unreadCount">0</span>
+                    </div>
+                    <div class="dropdown-menu" id="notificationsDropdown">
+                        <!-- Notifications will be dynamically added here -->
+                        <div class="dropdown-divider"></div>
+                        <a class="dropdown-item text-center" href="#" onclick="viewAllNotifications()">View all notifications</a>
+                    </div>
+                </div>
+            </div>
+
+                <!-- Add Tips & Best Practices Section -->
+                <div class="tips mt-4">
+                    <h2 class="text-center">Tips & Best Practices</h2>
+                    <ul class="list-group">
+                        <li class="list-group-item">
+                            <strong>Tip 1:</strong> Regularly inspect your hives to check for any signs of pests or diseases.
+                        </li>
+                        <li class="list-group-item">
+                            <strong>Tip 2:</strong> Maintain optimal hive temperature by providing adequate ventilation.
+                        </li>
+                        <li class="list-group-item">
+                            <strong>Tip 3:</strong> Ensure your bees have a consistent source of water nearby.
+                        </li>
+                        <li class="list-group-item">
+                            <strong>Tip 4:</strong> Rotate your frames to prevent wax moth infestations and maintain hive hygiene.
+                        </li>
+                        <li class="list-group-item">
+                            <strong>Tip 5:</strong> Keep records of your hive inspections and maintenance activities.
+                        </li>
+                    </ul>
+                </div>
+                <!-- End of Tips & Best Practices Section -->
+
+            </div>
+        </div>
+    </div>
+
+    <div class="footer text-center">
+        <p>&copy; 2024 Smart Beekeeping. All rights reserved.</p>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script type="module" src="index.js"></script>
+</body>
+</html>
