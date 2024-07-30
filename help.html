@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Beekeeping - Help</title>
+    <link rel="stylesheet" href="help.css">
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+        header {
+            background-color: #333;
+            color: white;
+            padding: 10px 20px;
+            opacity: 0;
+            animation: fadeIn 1s forwards;
+        }
+        .container {
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+            opacity: 0;
+            animation: fadeIn 1s 0.5s forwards; /* delay for staggered animation */
+        }
+        h1, h2 {
+            text-align: center;
+        }
+        .faq-item {
+            margin-bottom: 20px;
+        }
+        .faq-question {
+            width: 100%;
+            padding: 15px;
+            font-size: 18px;
+            text-align: left;
+            cursor: pointer;
+            background-color: #f1f1f1;
+            border: none;
+            outline: none;
+            transition: background-color 0.3s;
+        }
+        .faq-question:hover {
+            background-color: #ddd;
+        }
+        .faq-answer {
+            display: none;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-left: 5px solid #333;
+            overflow: hidden;
+        }
+        .contact {
+            text-align: center;
+            margin-top: 40px;
+        }
+        .contact a {
+            color: #007bff;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .contact a:hover {
+            text-decoration: underline;
+        }
+        .contact button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+        .contact button:hover {
+            background-color: #0056b3;
+        }
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes slideDown {
+            from { max-height: 0; }
+            to { max-height: 500px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Help & Support</h1>
+        <section class="faq">
+            <h2>Frequently Asked Questions</h2>
+            <div class="faq-item">
+                <button class="faq-question">What is Smart Beekeeping?</button>
+                <div class="faq-answer">
+                    <p>Smart Beekeeping is a modern solution to help beekeepers manage their apiaries efficiently using technology.</p>
+                </div>
+            </div>
+            <div class="faq-item">
+                <button class="faq-question">How do I get started?</button>
+                <div class="faq-answer">
+                    <p>You can get started by signing up for an account and adding your first apiary in the dashboard.</p>
+                </div>
+            </div>
+            <div class="faq-item">
+                <button class="faq-question">Can I track multiple apiaries?</button>
+                <div class="faq-answer">
+                    <p>Yes, you can manage and track multiple apiaries from a single account.</p>
+                </div>
+            </div>
+        </section>
+        <section class="contact">
+            <h2>Contact Us</h2>
+            <p>If you need further assistance, click the button below to reach us via email</p>
+            <button id="contactButton">Open Gmail</button>
+            
+        </section>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const faqQuestions = document.querySelectorAll('.faq-question');
+
+            faqQuestions.forEach(question => {
+                question.addEventListener('click', () => {
+                    const answer = question.nextElementSibling;
+                    const isVisible = answer.style.display === 'block';
+
+                    // Hide all answers
+                    document.querySelectorAll('.faq-answer').forEach(answer => {
+                        answer.style.display = 'none';
+                        answer.style.maxHeight = null;
+                    });
+
+                    // Show or hide the clicked answer
+                    if (!isVisible) {
+                        answer.style.display = 'block';
+                        answer.style.maxHeight = answer.scrollHeight + 'px';
+                    } else {
+                        answer.style.display = 'none';
+                        answer.style.maxHeight = null;
+                    }
+                });
+            });
+
+            // Add functionality to the Gmail button
+            document.getElementById('contactButton').addEventListener('click', () => {
+                const email = 'smartnyuki@gmail.com';
+                const subject = encodeURIComponent('Support Request');
+                const body = encodeURIComponent('Hello Support Team,\n\nI need assistance with...');
+                const gmailLink = `https://mail.google.com/mail/?view=cm&fs=1&to=${email}&su=${subject}&body=${body}`;
+                window.location.href = gmailLink;
+            });
+        });
+    </script>
+</body>
+</html>
