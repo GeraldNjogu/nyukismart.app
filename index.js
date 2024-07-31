@@ -1,4 +1,3 @@
-
 // Import Firebase SDKs
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.21.0/firebase-app.js';
 import { getFirestore, collection, addDoc, getDocs, doc, deleteDoc, getDoc } from 'https://www.gstatic.com/firebasejs/9.21.0/firebase-firestore.js';
@@ -12,7 +11,7 @@ const firebaseConfig = {
     storageBucket: "projectmain1-44cce.appspot.com",
     messagingSenderId: "592837634615",
     appId: "1:592837634615:web:ca63818dd7101534dc6db2"
-  };
+};
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
@@ -56,20 +55,26 @@ async function fetchApiaries() {
                 const apiary = doc.data();
                 const apiaryId = doc.id;
                 const apiaryCard = document.createElement('div');
-                apiaryCard.className = 'col-md-4';
+                apiaryCard.className = 'apiary-section';
 
                 apiaryCard.innerHTML = `
-                    <div class="card mb-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="apiary-header">
+                                <h2>${apiary.name}</h2>
+                                <div class="icon-buttons">
+                                    <button class="btn btn-primary" onclick="openAddHiveModal('${apiaryId}')">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                    <button class="btn btn-danger" onclick="deleteApiary('${apiaryId}')">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                         <div class="card-body">
-                            <h5 class="card-title">${apiary.name}</h5>
                             <p class="card-text">${apiary.location}</p>
-                            <button class="btn btn-primary btn-small" onclick="openAddHiveModal('${apiaryId}')">
-                                <i class="fas fa-plus"></i> Add Hive
-                            </button>
-                            <button class="btn btn-danger btn-small" onclick="deleteApiary('${apiaryId}')">
-                                <i class="fas fa-trash"></i> Delete Apiary
-                            </button>
-                            <div id="hives-${apiaryId}" class="mt-3"></div>
+                            <div id="hives-${apiaryId}" class="hive-container"></div>
                         </div>
                     </div>
                 `;
@@ -86,6 +91,8 @@ async function fetchApiaries() {
     }
 }
 
+
+
 // Display hives for a given apiary
 async function displayHives(apiaryId) {
     const hivesContainer = document.getElementById(`hives-${apiaryId}`);
@@ -99,16 +106,21 @@ async function displayHives(apiaryId) {
                 const hiveId = doc.id;
 
                 const hiveElement = document.createElement('div');
-                hiveElement.className = 'card mt-2';
+                hiveElement.className = 'hive-card';
                 hiveElement.innerHTML = `
-                    <div class="card-body">
-                        <h6 class="card-title">${hive.name}</h6>
-                        <button class="btn btn-secondary btn-small" onclick="viewHiveCondition('${apiaryId}', '${hiveId}')">
-                            <i class="fas fa-eye"></i> View Conditions
-                        </button>
-                        <button class="btn btn-danger btn-small" onclick="deleteHive('${apiaryId}', '${hiveId}')">
-                            <i class="fas fa-trash"></i> Delete Hive
-                        </button>
+                    <div class="hive-image">
+                        <!-- Optionally add an image or placeholder here -->
+                    </div>
+                    <div class="hive-info">
+                        <div class="hive-name">${hive.name}</div>
+                        <div class="hive-meta">
+                            <button class="btn btn-secondary btn-small" onclick="viewHiveCondition('${apiaryId}', '${hiveId}')">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="btn btn-danger btn-small" onclick="deleteHive('${apiaryId}', '${hiveId}')">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
                     </div>
                 `;
                 hivesContainer.appendChild(hiveElement);
@@ -202,8 +214,8 @@ window.viewHiveCondition = async function (apiaryId, hiveId) {
             hiveConditionDetails.innerHTML = `
                 <p><strong>Temperature:</strong> ${temperature}°C</p>
                 <p><strong>Humidity:</strong> ${humidity}%</p>
-                <p><strong>Sound:</strong> ${sound} dB</p> <!-- Assuming sound is in decibels -->
-                <p><strong>Weight:</strong> ${weight} kg</p> <!-- Assuming weight is in kilograms -->
+                <p><strong>Sound:</strong> ${sound} dB</p>
+                <p><strong>Weight:</strong> ${weight} kg</p>
             `;
             
             // Optionally, you can add a graph display here using Chart.js or any other library
@@ -272,3 +284,4 @@ document.getElementById('logoutLink').addEventListener('click', function(event) 
     event.preventDefault(); // Prevent the default anchor behavior
     window.location.href = 'cover.html'; // Redirect to cover.html
 });
+
