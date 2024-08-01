@@ -1,6 +1,8 @@
+
 // Import Firebase SDKs
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.21.0/firebase-app.js';
-import { getFirestore, collection, addDoc, getDocs, doc, deleteDoc, getDoc } from 'https://www.gstatic.com/firebasejs/9.21.0/firebase-firestore.js';
+import { getFirestore, collection, addDoc, getDocs, doc, deleteDoc, getDoc, query, where } from 'https://www.gstatic.com/firebasejs/9.21.0/firebase-firestore.js';
+import { getAuth } from 'https://www.gstatic.com/firebasejs/9.21.0/firebase-auth.js';
 
 // Firebase Configuration
 const firebaseConfig = {
@@ -16,6 +18,7 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+const auth = getAuth();
 
 // DOM Elements
 const addApiaryForm = document.getElementById('addApiaryForm');
@@ -28,15 +31,18 @@ addApiaryForm.addEventListener('submit', async (e) => {
     const apiaryName = document.getElementById('apiaryName').value;
     const apiaryLocation = document.getElementById('apiaryLocation').value;
 
-    if (apiaryName && apiaryLocation) {
+    const user = auth.currentUser;
+
+    if (user && apiaryName && apiaryLocation) {
         try {
             await addDoc(collection(db, 'apiaries'), {
+                userId: user.uid,
                 name: apiaryName,
                 location: apiaryLocation
             });
             console.log("Apiary added successfully");
             addApiaryForm.reset();
-            fetchApiaries(); // Refresh the list
+            fetchApiaries();
         } catch (error) {
             console.error("Error adding apiary: ", error);
         }
@@ -48,89 +54,126 @@ addApiaryForm.addEventListener('submit', async (e) => {
 // Fetch and display apiaries
 async function fetchApiaries() {
     apiaryData.innerHTML = '';
-    try {
-        const apiariesSnapshot = await getDocs(collection(db, 'apiaries'));
-        if (!apiariesSnapshot.empty) {
-            apiariesSnapshot.forEach((doc) => {
-                const apiary = doc.data();
-                const apiaryId = doc.id;
-                const apiaryCard = document.createElement('div');
-                apiaryCard.className = 'apiary-section';
 
-                apiaryCard.innerHTML = `
-                    <div class="card">
-                        <div class="card-header">
-                            <div class="apiary-header">
-                                <h2>${apiary.name}</h2>
-                                <div class="icon-buttons">
-                                    <button class="btn btn-primary" onclick="openAddHiveModal('${apiaryId}')">
-                                        <i class="fas fa-plus"></i>
-                                    </button>
-                                    <button class="btn btn-danger" onclick="deleteApiary('${apiaryId}')">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
+    const user = auth.currentUser;
+
+    if (user) {
+        try {
+            const apiariesSnapshot = await getDocs(query(collection(db, 'apiaries'), where('userId', '==', user.uid)));
+            if (!apiariesSnapshot.empty) {
+                apiariesSnapshot.forEach((doc) => {
+                    const apiary = doc.data();
+                    const apiaryId = doc.id;
+                    const apiaryCard = document.createElement('div');
+                    apiaryCard.className = 'apiary-section';
+
+                    apiaryCard.innerHTML = `
+                        <div class="card">
+                            <div class="card-header">
+                                <div class="apiary-header">
+                                    <h2>${apiary.name}</h2>
+                                    <div class="icon-buttons">
+                                        <button class="btn btn-primary" onclick="openAddHiveModal('${apiaryId}')">
+                                            <i class="fas fa-plus"></i>
+                                        </button>
+                                        <button class="btn btn-danger" onclick="deleteApiary('${apiaryId}')">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
+                            <div class="card-body">
+                                <p class="card-text">${apiary.location}</p>
+                                <div id="hives-${apiaryId}" class="hive-container"></div>
+                            </div>
                         </div>
-                        <div class="card-body">
-                            <p class="card-text">${apiary.location}</p>
-                            <div id="hives-${apiaryId}" class="hive-container"></div>
-                        </div>
-                    </div>
-                `;
-                apiaryData.appendChild(apiaryCard);
+                    `;
+                    apiaryData.appendChild(apiaryCard);
 
-                displayHives(apiaryId);
-            });
-        } else {
-            apiaryData.innerHTML = '<p>No apiaries found. Add a new apiary above.</p>';
+                    displayHives(apiaryId);
+                });
+            } else {
+                apiaryData.innerHTML = '<p>No apiaries found. Add a new apiary above.</p>';
+            }
+        } catch (error) {
+            console.error("Error fetching apiaries: ", error);
+            apiaryData.innerHTML = '<p>Error fetching apiaries. Check the console for more details.</p>';
         }
-    } catch (error) {
-        console.error("Error fetching apiaries: ", error);
-        apiaryData.innerHTML = '<p>Error fetching apiaries. Check the console for more details.</p>';
+    } else {
+        apiaryData.innerHTML = '<p>Please log in to view your apiaries.</p>';
     }
 }
 
+// Add a new hive
+addHiveForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const hiveName = document.getElementById('hiveName').value;
+    const selectedApiary = document.getElementById('selectedApiary').value;
 
+    const user = auth.currentUser;
+
+    if (user && hiveName) {
+        try {
+            await addDoc(collection(db, 'apiaries', selectedApiary, 'hives'), {
+                userId: user.uid,
+                name: hiveName
+            });
+            console.log("Hive added successfully");
+            addHiveForm.reset();
+            $('#addHiveModal').modal('hide');
+            displayHives(selectedApiary);
+        } catch (error) {
+            console.error("Error adding hive: ", error);
+        }
+    } else {
+        alert("Please enter a hive name.");
+    }
+});
 
 // Display hives for a given apiary
 async function displayHives(apiaryId) {
     const hivesContainer = document.getElementById(`hives-${apiaryId}`);
     hivesContainer.innerHTML = '';
 
-    try {
-        const hivesSnapshot = await getDocs(collection(db, 'apiaries', apiaryId, 'hives'));
-        if (!hivesSnapshot.empty) {
-            hivesSnapshot.forEach((doc) => {
-                const hive = doc.data();
-                const hiveId = doc.id;
+    const user = auth.currentUser;
 
-                const hiveElement = document.createElement('div');
-                hiveElement.className = 'hive-card';
-                hiveElement.innerHTML = `
-                    <div class="hive-image">
-                        <!-- Optionally add an image or placeholder here -->
-                    </div>
-                    <div class="hive-info">
-                        <div class="hive-name">${hive.name}</div>
-                        <div class="hive-meta">
-                            <button class="btn btn-secondary btn-small" onclick="viewHiveCondition('${apiaryId}', '${hiveId}')">
-                                <i class="fas fa-eye"></i>
-                            </button>
-                            <button class="btn btn-danger btn-small" onclick="deleteHive('${apiaryId}', '${hiveId}')">
-                                <i class="fas fa-trash"></i>
-                            </button>
+    if (user) {
+        try {
+            const hivesSnapshot = await getDocs(query(collection(db, 'apiaries', apiaryId, 'hives'), where('userId', '==', user.uid)));
+            if (!hivesSnapshot.empty) {
+                hivesSnapshot.forEach((doc) => {
+                    const hive = doc.data();
+                    const hiveId = doc.id;
+
+                    const hiveElement = document.createElement('div');
+                    hiveElement.className = 'hive-card';
+                    hiveElement.innerHTML = `
+                        <div class="hive-image">
+                            <!-- Optionally add an image or placeholder here -->
                         </div>
-                    </div>
-                `;
-                hivesContainer.appendChild(hiveElement);
-            });
-        } else {
-            hivesContainer.innerHTML = '<p>No hives found for this apiary.</p>';
+                        <div class="hive-info">
+                            <div class="hive-name">${hive.name}</div>
+                            <div class="hive-meta">
+                                <button class="btn btn-secondary btn-small" onclick="viewHiveCondition('${apiaryId}', '${hiveId}')">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn btn-danger btn-small" onclick="deleteHive('${apiaryId}', '${hiveId}')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    hivesContainer.appendChild(hiveElement);
+                });
+            } else {
+                hivesContainer.innerHTML = '<p>No hives found for this apiary.</p>';
+            }
+        } catch (error) {
+            console.error("Error fetching hives: ", error);
+            hivesContainer.innerHTML = '<p>Error fetching hives. Check the console for more details.</p>';
         }
-    } catch (error) {
-        console.error("Error fetching hives: ", error);
-        hivesContainer.innerHTML = '<p>Error fetching hives. Check the console for more details.</p>';
+    } else {
+        hivesContainer.innerHTML = '<p>Please log in to view hives.</p>';
     }
 }
 
@@ -140,46 +183,34 @@ window.openAddHiveModal = function (apiaryId) {
     document.getElementById('selectedApiary').value = apiaryId;
 };
 
-// Add a new hive
-addHiveForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const hiveName = document.getElementById('hiveName').value;
-    const selectedApiary = document.getElementById('selectedApiary').value;
-
-    if (hiveName) {
-        try {
-            await addDoc(collection(db, 'apiaries', selectedApiary, 'hives'), {
-                name: hiveName,
-                // Add more hive details here if needed
-            });
-            console.log("Hive added successfully");
-            addHiveForm.reset();
-            $('#addHiveModal').modal('hide');
-            displayHives(selectedApiary); // Refresh hives list for the selected apiary
-        } catch (error) {
-            console.error("Error adding hive: ", error);
-        }
-    } else {
-        alert("Please enter a hive name.");
-    }
-});
-
 // Delete an apiary
 window.deleteApiary = async function (apiaryId) {
     if (confirm("Are you sure you want to delete this apiary?")) {
-        try {
-            // Delete all hives under the apiary
-            const hivesSnapshot = await getDocs(collection(db, 'apiaries', apiaryId, 'hives'));
-            hivesSnapshot.forEach(async (doc) => {
-                await deleteDoc(doc.ref);
-            });
+        const user = auth.currentUser;
 
-            // Delete the apiary
-            await deleteDoc(doc(db, 'apiaries', apiaryId));
-            console.log("Apiary deleted successfully");
-            fetchApiaries(); // Refresh the list
-        } catch (error) {
-            console.error("Error deleting apiary: ", error);
+        if (user) {
+            try {
+                const apiaryDoc = await getDoc(doc(db, 'apiaries', apiaryId));
+
+                if (apiaryDoc.exists() && apiaryDoc.data().userId === user.uid) {
+                    // Delete all hives under the apiary
+                    const hivesSnapshot = await getDocs(collection(db, 'apiaries', apiaryId, 'hives'));
+                    hivesSnapshot.forEach(async (doc) => {
+                        await deleteDoc(doc.ref);
+                    });
+
+                    // Delete the apiary
+                    await deleteDoc(doc(db, 'apiaries', apiaryId));
+                    console.log("Apiary deleted successfully");
+                    fetchApiaries();
+                } else {
+                    console.error("Unauthorized or apiary does not exist");
+                }
+            } catch (error) {
+                console.error("Error deleting apiary: ", error);
+            }
+        } else {
+            alert("You must be logged in to delete an apiary.");
         }
     }
 }
@@ -187,94 +218,67 @@ window.deleteApiary = async function (apiaryId) {
 // Delete a hive
 window.deleteHive = async function (apiaryId, hiveId) {
     if (confirm("Are you sure you want to delete this hive?")) {
-        try {
-            await deleteDoc(doc(db, 'apiaries', apiaryId, 'hives', hiveId));
-            console.log("Hive deleted successfully");
-            displayHives(apiaryId); // Refresh the hives list for the apiary
-        } catch (error) {
-            console.error("Error deleting hive: ", error);
+        const user = auth.currentUser;
+
+        if (user) {
+            try {
+                const hiveDoc = await getDoc(doc(db, 'apiaries', apiaryId, 'hives', hiveId));
+
+                if (hiveDoc.exists() && hiveDoc.data().userId === user.uid) {
+                    await deleteDoc(hiveDoc.ref);
+                    console.log("Hive deleted successfully");
+                    displayHives(apiaryId);
+                } else {
+                    console.error("Unauthorized or hive does not exist");
+                }
+            } catch (error) {
+                console.error("Error deleting hive: ", error);
+            }
+        } else {
+            alert("You must be logged in to delete a hive.");
         }
     }
 }
 
 // View hive conditions (real data from Firestore)
 window.viewHiveCondition = async function (apiaryId, hiveId) {
-    try {
-        const hiveDoc = await getDoc(doc(db, 'apiaries', apiaryId, 'hives', hiveId));
-        if (hiveDoc.exists()) {
-            const hiveData = hiveDoc.data();
+    const user = auth.currentUser;
 
-            // Assuming hiveData contains fields like temperature, humidity, sound, and weight
-            const temperature = hiveData.temperature || 'N/A';
-            const humidity = hiveData.humidity || 'N/A';
-            const sound = hiveData.sound || 'N/A';
-            const weight = hiveData.weight || 'N/A';
+    if (user) {
+        try {
+            const hiveDoc = await getDoc(doc(db, 'apiaries', apiaryId, 'hives', hiveId));
 
-            const hiveConditionDetails = document.getElementById('hiveConditionDetails');
-            hiveConditionDetails.innerHTML = `
-                <p><strong>Temperature:</strong> ${temperature}°C</p>
-                <p><strong>Humidity:</strong> ${humidity}%</p>
-                <p><strong>Sound:</strong> ${sound} dB</p>
-                <p><strong>Weight:</strong> ${weight} kg</p>
-            `;
-            
-            // Optionally, you can add a graph display here using Chart.js or any other library
-            // Example:
-            // renderHiveWeeklyGraph(hiveData);
-            
-            $('#hiveConditionModal').modal('show');
-        } else {
-            console.log("No such document!");
-        }
-    } catch (error) {
-        console.error("Error fetching hive conditions: ", error);
-    }
-};
+            if (hiveDoc.exists() && hiveDoc.data().userId === user.uid) {
+                const hiveData = hiveDoc.data();
 
-// Example function to render a graph using Chart.js
-function renderHiveWeeklyGraph(data) {
-    const ctx = document.getElementById('hiveWeeklyGraph').getContext('2d');
-    new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: data.labels,
-            datasets: [
-                {
-                    label: 'Temperature',
-                    data: data.temperatures,
-                    borderColor: 'rgba(255, 99, 132, 1)',
-                    borderWidth: 1
-                },
-                {
-                    label: 'Humidity',
-                    data: data.humidities,
-                    borderColor: 'rgba(54, 162, 235, 1)',
-                    borderWidth: 1
-                },
-                {
-                    label: 'Sound',
-                    data: data.sounds, // Ensure you have sound data
-                    borderColor: 'rgba(75, 192, 192, 1)',
-                    borderWidth: 1
-                },
-                {
-                    label: 'Weight',
-                    data: data.weights, // Ensure you have weight data
-                    borderColor: 'rgba(153, 102, 255, 1)',
-                    borderWidth: 1
-                }
-            ]
-        },
-        options: {
-            scales: {
-                yAxes: [{
-                    ticks: {
-                        beginAtZero: true
-                    }
-                }]
+                // Assuming hiveData contains fields like temperature, humidity, sound, and weight
+                const temperature = hiveData.temperature || 'N/A';
+                const humidity = hiveData.humidity || 'N/A';
+                const sound = hiveData.sound || 'N/A';
+                const weight = hiveData.weight || 'N/A';
+
+                const hiveConditionDetails = document.getElementById('hiveConditionDetails');
+                hiveConditionDetails.innerHTML = `
+                    <p><strong>Temperature:</strong> ${temperature}°C</p>
+                    <p><strong>Humidity:</strong> ${humidity}%</p>
+                    <p><strong>Sound:</strong> ${sound} dB</p>
+                    <p><strong>Weight:</strong> ${weight} kg</p>
+                `;
+                
+                // Optionally, you can add a graph display here using Chart.js or any other library
+                // Example:
+                // renderHiveWeeklyGraph(hiveData);
+                
+                $('#hiveConditionModal').modal('show');
+            } else {
+                console.error("Unauthorized access or hive data not found");
             }
+        } catch (error) {
+            console.error("Error fetching hive conditions: ", error);
         }
-    });
+    } else {
+        alert("Please log in to view hive conditions.");
+    }
 }
 
 // Initial load
